@@ -3,22 +3,15 @@ package autotranslate;
 import arc.Core;
 import arc.Events;
 import arc.func.Cons;
-import arc.scene.event.*;
 import arc.scene.style.TextureRegionDrawable;
-import arc.scene.ui.Button;
-import arc.scene.ui.TextButton;
-import arc.struct.Seq;
 import arc.util.*;
 import com.deepl.api.*;
 import mindustry.Vars;
 import mindustry.game.EventType;
-import mindustry.gen.Call;
 import mindustry.mod.Mod;
 import mindustry.ui.dialogs.FullTextDialog;
 import mindustry.ui.dialogs.SettingsMenuDialog;
-import mindustry.ui.fragments.ChatFragment;
 
-import java.lang.reflect.Field;
 import java.util.concurrent.atomic.AtomicReference;
 
 import static arc.Core.bundle;
@@ -32,7 +25,7 @@ public class AutoTranslate extends Mod {
 
     String authKey;
 
-    private Map<String, TextResult> messageCache = new HashMap<String, TextResult>();
+    private final Map<String, TextResult> messageCache = new HashMap<>();
 
     @Override
     public void init() {
@@ -96,14 +89,13 @@ public class AutoTranslate extends Mod {
 
                 if(Vars.player.id == e.player.id)
                     return;
-                
+
                 if(newMessage.startsWith("+"))
                     return;
 
                 if(lastMessage.equals(newMessage))
                     return;
 
-                String finalMessage = newMessage;
                 lastMessage = newMessage;
 
                 Threads.thread(() -> {
@@ -111,7 +103,7 @@ public class AutoTranslate extends Mod {
                         Translator translator = new Translator(authKey);
                         String language = Core.settings.getString("target-language", "en-GB");
 
-                        TextResult translatedMessage = translateString(translator, language, finalMessage);
+                        TextResult translatedMessage = translateString(translator, language, newMessage);
 
                         if(translatedMessage == null)
                         {
@@ -122,7 +114,7 @@ public class AutoTranslate extends Mod {
 
                         String translation = translatedMessage.getText().trim() + " [lightgray] (" + translatedMessage.getDetectedSourceLanguage() + ")";
 
-                        if(e.player != null && e.player.name() != null)
+                        if(e.player.name() != null)
                             translation = "["+ Strings.stripColors(e.player.name()) +"]: " + translatedMessage.getText().trim() + " [lightgray] (" + translatedMessage.getDetectedSourceLanguage() + ")";
 
                         Vars.player.sendMessage(translation);
@@ -142,7 +134,7 @@ public class AutoTranslate extends Mod {
         baseDialog.show(title, message);
     }
 
-    private class ButtonSetting extends SettingsMenuDialog.SettingsTable.Setting {
+    private static class ButtonSetting extends SettingsMenuDialog.SettingsTable.Setting {
         String name;
         Runnable clicked;
 
@@ -165,14 +157,14 @@ public class AutoTranslate extends Mod {
         try {
             java.security.MessageDigest md = java.security.MessageDigest.getInstance("MD5");
             byte[] array = md.digest(text.getBytes());
-            StringBuffer sb = new StringBuffer();
-            for (int i = 0; i < array.length; ++i) {
-                sb.append(Integer.toHexString((array[i] & 0xFF) | 0x100).substring(1,3));
+            StringBuilder sb = new StringBuilder();
+            for (byte b : array) {
+                sb.append(Integer.toHexString((b & 0xFF) | 0x100), 1, 3);
             }
             return sb.toString();
         } catch (java.security.NoSuchAlgorithmException e) {
+            return null;
         }
-        return null;
     }
 
     private TextResult translateString(Translator translator, String language, String finalMessage) throws DeepLException, InterruptedException {
@@ -187,4 +179,6 @@ public class AutoTranslate extends Mod {
         messageCache.put(messageKey, result);
         return result;
     }
+
+
 }
