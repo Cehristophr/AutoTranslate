@@ -88,12 +88,15 @@ public class AutoTranslate extends Mod {
                 if (newMessage.isEmpty())
                     return;
 
-                if(e.player != null && Vars.player != null)
-                    if(Vars.player.id == e.player.id)
-                        return;
+                if(e.player == null)
+                    return;
 
-                if (newMessage.contains("]")) newMessage = newMessage.substring(newMessage.indexOf("]"));
+                if(Vars.player == null)
+                    return;
 
+                if(Vars.player.id == e.player.id)
+                    return;
+                
                 if(newMessage.startsWith("+"))
                     return;
 
@@ -119,7 +122,7 @@ public class AutoTranslate extends Mod {
 
                         String translation = translatedMessage.getText().trim() + " [lightgray] (" + translatedMessage.getDetectedSourceLanguage() + ")";
 
-                        if(e.player != null)
+                        if(e.player != null && e.player.name() != null)
                             translation = "["+ Strings.stripColors(e.player.name()) +"]: " + translatedMessage.getText().trim() + " [lightgray] (" + translatedMessage.getDetectedSourceLanguage() + ")";
 
                         Vars.player.sendMessage(translation);
